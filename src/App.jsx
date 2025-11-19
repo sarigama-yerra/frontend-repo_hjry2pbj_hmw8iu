@@ -36,14 +36,14 @@ function AuthProvider({ children }) {
   )
 }
 
-// ---------- Buttons (primary revamped; outline already perfect) ----------
+// ---------- Buttons (primary revamped; outline kept and enhanced globally via CSS) ----------
 function PrimaryButton({ to, children, className = '', ...props }){
   const Comp = to ? Link : 'button'
   return (
     <Comp to={to} className={`relative group inline-flex items-center justify-center rounded-full px-7 py-3 font-semibold uppercase tracking-wide text-white select-none ${className}`} {...props}>
       {/* Outer neon ring */}
       <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 opacity-20 blur-xl group-hover:opacity-40 transition"/>
-      {/* Core gradient (uses base .btn-primary palette) */}
+      {/* Core gradient (leverages .btn-primary palette) */}
       <span className="relative z-[1] btn-primary px-0 py-0 !uppercase !tracking-wide">{children}</span>
       {/* Shimmer sweep */}
       <span className="pointer-events-none absolute inset-[-1px] rounded-full overflow-hidden">
@@ -53,7 +53,7 @@ function PrimaryButton({ to, children, className = '', ...props }){
   )
 }
 
-// ---------- Top Navigation (heavier polish, more effects) ----------
+// ---------- Top Navigation (more effects, active states) ----------
 function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -80,7 +80,7 @@ function Navbar() {
             <div className="relative flex items-center gap-3">
               <Link to="/" className="flex items-center gap-2 text-white font-semibold tracking-tight">
                 <div className="relative">
-                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-400 to-purple-500 shadow-[0_0_24px_rgba(0,255,255,0.55)]" />
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-400 to-purple-500 shadow-[0_0_24px_rgba(0,255,255,0.55)] floaty" />
                   <div className="absolute inset-0 rounded-xl animate-pulse bg-cyan-400/10" />
                 </div>
                 <span className="text-white">BotBuy</span>
@@ -158,14 +158,14 @@ function Footer(){
 function Section({ title, subtitle, children, id }){
   return (
     <section id={id} className="max-w-[1280px] mx-auto px-4 py-16">
-      {title && <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">{title}</h2>}
-      {subtitle && <p className="text-slate-300 mb-8">{subtitle}</p>}
+      {title && <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight reveal">{title}</h2>}
+      {subtitle && <p className="text-slate-300 mb-8 reveal" style={{animationDelay:'60ms'}}>{subtitle}</p>}
       {children}
     </section>
   )
 }
 
-// ---------- Left Sidebar (remade, premium, supports many pages) ----------
+// ---------- Left Sidebar (premium, pretty collapsed, supports many pages) ----------
 function LeftSidebar(){
   const { pathname } = useLocation()
   const [open, setOpen] = useState(true)
@@ -209,28 +209,37 @@ function LeftSidebar(){
   ]
 
   return (
-    <aside className={`hidden lg:flex fixed top-24 left-3 z-40 transition-[width] duration-300 ${open? 'w-[280px]' : 'w-[80px]'}`}>
+    <aside className={`hidden lg:flex fixed top-24 left-3 z-40 transition-[width] duration-300 ${open? 'w-[280px]' : 'w-[84px]'}`}>
       <div className="glass-card h-[72vh] w-full p-3 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_14px_rgba(0,255,255,0.6)]" />
-            <span className={`text-xs text-slate-300 transition-opacity ${open? 'opacity-100' : 'opacity-0'}`}>Navigation</span>
+            <span className={`text-[11px] uppercase tracking-wider text-slate-300 transition-opacity ${open? 'opacity-100' : 'opacity-0'}`}>Navigation</span>
           </div>
           <button onClick={()=>setOpen(v=>!v)} className="btn-ghost px-2 py-1" aria-label="Toggle sidebar" title={open? 'Collapse' : 'Expand'}>
             {open? '‹' : '›'}
           </button>
         </div>
-        <div className="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
+        <div className={`mt-3 flex-1 overflow-y-auto pr-1 ${open? 'space-y-4' : 'space-y-3'}`}>
           {groups.map((g,gi)=> (
             <div key={gi}>
-              <div className={`text-[11px] uppercase tracking-wider text-slate-400 px-2 ${open? 'opacity-100' : 'opacity-0'} transition`}>{g.label}</div>
-              <div className="mt-2 space-y-2">
+              <div className={`text-[11px] uppercase tracking-wider text-slate-400 px-2 transition ${open? 'opacity-100' : 'opacity-0'}`}>{g.label}</div>
+              <div className={`mt-2 ${open? 'space-y-2' : 'space-y-2'}`}>
                 {g.items.map((it, i)=> {
                   const active = pathname === it.to || (it.to !== '/' && pathname.startsWith(it.to))
+                  if(open){
+                    return (
+                      <Link key={i} to={it.to} className={`group flex items-center gap-3 px-3 py-2 rounded-xl border border-white/10 transition ${active? 'bg-white/10 border-cyan-300/30 shadow-[0_0_22px_rgba(0,255,255,0.18)] text-white' : 'text-slate-200 hover:bg-white/5 hover:shadow-[0_0_20px_rgba(0,255,255,0.12)]'}`}>
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(0,255,255,0.6)]" />
+                        <span className="whitespace-nowrap">{it.t}</span>
+                      </Link>
+                    )
+                  }
+                  // collapsed: pretty round icon buttons with tooltip
                   return (
-                    <Link key={i} to={it.to} title={it.t} className={`group flex items-center gap-3 px-3 py-2 rounded-xl border border-white/10 transition ${active? 'bg-white/10 border-cyan-300/30 shadow-[0_0_22px_rgba(0,255,255,0.18)] text-white' : 'text-slate-200 hover:bg-white/5 hover:shadow-[0_0_20px_rgba(0,255,255,0.12)]'}`}>
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(0,255,255,0.6)]" />
-                      <span className={`transition-all duration-300 whitespace-nowrap ${open? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>{it.t}</span>
+                    <Link key={i} to={it.to} title={it.t} className={`group relative grid place-items-center h-10 w-10 mx-auto rounded-full border border-white/10 transition ${active? 'bg-white/10 border-cyan-300/30 shadow-[0_0_22px_rgba(0,255,255,0.18)]' : 'hover:bg-white/5 hover:shadow-[0_0_20px_rgba(0,255,255,0.12)]'}`}>
+                      <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(0,255,255,0.6)]" />
+                      <span className="pointer-events-none absolute left-12 whitespace-nowrap rounded-lg border border-white/10 bg-black/70 px-2 py-1 text-xs text-white opacity-0 translate-y-0 group-hover:opacity-100 group-hover:translate-y-0 transition">{it.t}</span>
                     </Link>
                   )
                 })}
@@ -272,10 +281,10 @@ function BackgroundFX(){
   )
 }
 
-// ---------- Cards (remade) ----------
+// ---------- Cards (remade, richer motion) ----------
 function FeatureCard({ title, desc, delay = 0 }){
   return (
-    <div className="group relative glass-card p-6 overflow-hidden transition-transform" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${delay}ms`}}>
+    <div className="group relative glass-card p-6 overflow-hidden transition-transform will-change-transform" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${delay}ms`}}>
       <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.15),transparent_60%)]" />
       <div className="flex items-center gap-3">
@@ -284,7 +293,7 @@ function FeatureCard({ title, desc, delay = 0 }){
       </div>
       <div className="text-slate-400 text-sm mt-2">{desc}</div>
       <div className="mt-4 h-px w-full gradient-line" />
-      <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition">Learn more →</div>
+      <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition translate-y-1 group-hover:translate-y-0">Learn more →</div>
     </div>
   )
 }
@@ -323,32 +332,23 @@ function Home(){
             </div>
           </div>
 
-          {/* Hero visual */}
+          {/* Hero visual (no fake data; illustrative UI blocks) */}
           <div className="hidden md:block">
             <div className="sticky top-28">
               <div className="relative glass-card p-6 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.08),transparent_50%)]" />
                 <div className="relative z-[1] space-y-3">
-                  <div className="text-white/90 font-semibold">Live metrics</div>
+                  <div className="text-white/90 font-semibold">Preview</div>
+                  {/* Faux UI shapes without numeric claims */}
                   <div className="grid grid-cols-3 gap-3">
-                    {[
-                      ['2m+','Requests'],['<200ms','Step'],['99.9%','Uptime']
-                    ].map((m,i)=> (
-                      <div key={i} className="glass-card p-3 text-center">
-                        <div className="text-lg font-bold text-white">{m[0]}</div>
-                        <div className="text-[11px] text-slate-400">{m[1]}</div>
-                      </div>
+                    {[0,1,2].map((i)=> (
+                      <div key={i} className="glass-card p-3 h-16 animate-pulse"/>
                     ))}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="glass-card p-3">
-                      <div className="text-xs text-slate-400">Today</div>
-                      <div className="text-2xl font-extrabold text-white">$1,240</div>
-                    </div>
-                    <div className="glass-card p-3">
-                      <div className="text-xs text-slate-400">New customers</div>
-                      <div className="text-2xl font-extrabold text-white">+58</div>
-                    </div>
+                    {[0,1].map((i)=> (
+                      <div key={i} className="glass-card p-3 h-16"/>
+                    ))}
                   </div>
                   <PrimaryButton to="/pricing" className="w-full">Launch now</PrimaryButton>
                 </div>
@@ -361,7 +361,7 @@ function Home(){
       {/* Trust bar */}
       <div className="px-4">
         <div className="mx-auto max-w-[1280px] glass-card p-4 flex flex-wrap items-center justify-between gap-4">
-          {['Secure Payments','Encrypted Sessions','99.9% Uptime','Instant Delivery'].map((t,i)=> (
+          {['Secure Payments','Encrypted Sessions','High Availability','Instant Delivery'].map((t,i)=> (
             <div key={i} className="text-sm text-slate-300 flex items-center gap-2" style={{animation:'rise 480ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${i*80}ms`}}>
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_18px_rgba(0,255,255,0.6)]" />
               {t}
@@ -424,17 +424,17 @@ function Home(){
         </div>
       </Section>
 
-      {/* Comparison */}
-      <Section title="Why choose BotBuy" subtitle="Side-by-side with typical checkout solutions">
+      {/* Comparison (no claims; just qualitative) */}
+      <Section title="Why choose BotBuy" subtitle="Designed for a premium buying experience">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="glass-card p-6">
-            <div className="text-white font-semibold mb-2">BotBuy</div>
+            <div className="text-white font-semibold mb-2">Experience</div>
             <ul className="text-sm text-slate-300 space-y-2">
               <li>• Polished, animated UI out of the box</li>
               <li>• License keys + instant delivery</li>
               <li>• Owner + customer portals</li>
               <li>• Simple webhooks</li>
-              <li>• Beautiful analytics</li>
+              <li>• Thoughtful analytics surfaces</li>
             </ul>
           </div>
           <div className="glass-card p-6">
@@ -450,16 +450,16 @@ function Home(){
         </div>
       </Section>
 
-      {/* Testimonials */}
-      <Section title="Loved by creators" subtitle="Real signals from early teams">
+      {/* Stories (replaces testimonial numbers) */}
+      <Section title="Creator stories" subtitle="Snapshots from real workflows">
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            ['“Our conversions jumped 22% in a week.”','Lena, AlgoFoundry'],
-            ['“Set up in an afternoon. Looks like a million bucks.”','Ravi, ScriptHaus'],
-            ['“Delivery and keys are instant. Support is easy.”','Kai, ModForge'],
+            ['Algo trading setup','End-to-end delivery with license keys and updates.'],
+            ['Game mod shop','Secure distribution and simple customer portal.'],
+            ['AI add-on store','Gate premium endpoints and manage credits.'],
           ].map((t,i)=> (
             <div key={i} className="glass-card p-6">
-              <div className="text-white mb-2">{t[0]}</div>
+              <div className="text-white font-semibold mb-2">{t[0]}</div>
               <div className="text-slate-400 text-sm">{t[1]}</div>
             </div>
           ))}
@@ -494,7 +494,7 @@ function Features(){
             {[
               'Beautiful product pages','Secure payments','Customer accounts','Order management','Coupons & promos','Analytics','Webhooks','Export data'
             ].map((f,i)=> (
-              <li key={i} className="glass-card p-5">{f}</li>
+              <li key={i} className="glass-card p-5 reveal" style={{animationDelay:`${i*60}ms`}}>{f}</li>
             ))}
           </ul>
         </Section>
@@ -515,7 +515,7 @@ function Pricing(){
         <Section title="Pricing" subtitle="Choose a plan and start selling">
           <div className="grid md:grid-cols-3 gap-6">
             {plans.length ? plans.map((p)=> (
-              <div key={p.slug} className="group glass-card p-6 hover:border-cyan-400/20 transition relative overflow-hidden">
+              <div key={p.slug} className="group glass-card p-6 hover:border-cyan-400/20 transition relative overflow-hidden reveal">
                 <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
                 <h3 className="text-white text-xl font-semibold mb-1">{p.title}</h3>
                 <p className="text-slate-400 text-sm mb-3">{p.description}</p>
@@ -688,11 +688,11 @@ function Dashboard(){
 
 function Card({title,desc,to}){
   return (
-    <Link to={to} className="group relative glass-card p-6 hover:border-cyan-400/20 transition overflow-hidden">
+    <Link to={to} className="group relative glass-card p-6 hover:border-cyan-400/20 transition overflow-hidden reveal">
       <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
       <div className="text-white font-semibold mb-1">{title}</div>
       <div className="text-slate-400 text-sm">{desc}</div>
-      <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition">Open →</div>
+      <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition translate-y-1 group-hover:translate-y-0">Open →</div>
     </Link>
   )
 }
@@ -857,16 +857,24 @@ const SimplePage = ({title, body}) => (
 )
 
 function Blog(){
+  const posts = [
+    { id: 'delightful-checkouts', title: 'Designing delightful checkouts', blurb: 'Micro-interactions that make buying feel premium.' },
+    { id: 'launch-playbook', title: 'Launch playbook', blurb: 'From first plan to first sale in an afternoon.' },
+    { id: 'motion-systems', title: 'Motion systems', blurb: 'Consistency rules for polish across surfaces.' },
+    { id: 'support-that-scales', title: 'Support that scales', blurb: 'Keeping customers happy with minimal effort.' },
+    { id: 'secure-delivery', title: 'Secure delivery', blurb: 'License keys, receipts, and updates.' },
+    { id: 'analytics-that-help', title: 'Analytics that help', blurb: 'Signals that actually guide iteration.' },
+  ]
   return (
     <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
       <div className="lg:pl-24">
         <Section title="Blog" subtitle="Latest tips for automation sellers">
           <div className="grid md:grid-cols-3 gap-6">
-            {[1,2,3,4,5,6].map(i=> (
-              <Link key={i} to={`/blog/${i}`} className="group glass-card p-5 hover:border-cyan-400/20 transition relative overflow-hidden">
+            {posts.map(p=> (
+              <Link key={p.id} to={`/blog/${p.id}`} className="group glass-card p-5 hover:border-cyan-400/20 transition relative overflow-hidden reveal">
                 <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
-                <div className="text-white font-semibold mb-1">Post #{i}</div>
-                <div className="text-slate-400 text-sm">How to scale your bot sales</div>
+                <div className="text-white font-semibold mb-1">{p.title}</div>
+                <div className="text-slate-400 text-sm">{p.blurb}</div>
                 <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition">Read →</div>
               </Link>
             ))}
