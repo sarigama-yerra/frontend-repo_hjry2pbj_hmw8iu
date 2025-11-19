@@ -1,5 +1,5 @@
 import React, { useEffect, useState, createContext, useContext } from 'react'
-import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import './index.css'
 
 // ---------- Config ----------
@@ -36,39 +36,76 @@ function AuthProvider({ children }) {
   )
 }
 
-// ---------- UI Shell ----------
+// ---------- Buttons (primary revamped; outline already perfect) ----------
+function PrimaryButton({ to, children, className = '', ...props }){
+  const Comp = to ? Link : 'button'
+  return (
+    <Comp to={to} className={`relative group inline-flex items-center justify-center rounded-full px-7 py-3 font-semibold uppercase tracking-wide text-white select-none ${className}`} {...props}>
+      {/* Outer neon ring */}
+      <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 opacity-20 blur-xl group-hover:opacity-40 transition"/>
+      {/* Core gradient (uses base .btn-primary palette) */}
+      <span className="relative z-[1] btn-primary px-0 py-0 !uppercase !tracking-wide">{children}</span>
+      {/* Shimmer sweep */}
+      <span className="pointer-events-none absolute inset-[-1px] rounded-full overflow-hidden">
+        <span className="absolute top-0 -left-1/3 h-full w-1/2 opacity-30 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-[shimmer_1.2s_linear_infinite]" />
+      </span>
+    </Comp>
+  )
+}
+
+// ---------- Top Navigation (heavier polish, more effects) ----------
 function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  const links = [
+    { label: 'Features', to: '/features' },
+    { label: 'Pricing', to: '/pricing' },
+    { label: 'Blog', to: '/blog' },
+    { label: 'Docs', to: '/docs' },
+    { label: 'Contact', to: '/contact' },
+  ]
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 nav-blur">
-      <div className="nav-container">
-        <div className="nav-inner">
-          <Link to="/" className="flex items-center gap-2 text-white font-semibold tracking-tight">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 to-purple-500 shadow-[0_0_18px_rgba(0,255,255,0.45)]" />
-            <span className="text-white">BotBuy</span>
-          </Link>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* Ambient beams */}
+      <div className="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 h-40 w-[720px] bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-fuchsia-500/20 blur-3xl rounded-full"/>
+      <div className="nav-blur">
+        <div className="nav-container">
+          <div className="nav-inner relative">
+            {/* Glow ring */}
+            <div className="pointer-events-none absolute -inset-px rounded-2xl bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_60%)]" />
 
-          <nav className="hidden md:flex items-center gap-6 text-slate-200">
-            <Link to="/features" className="hover:text-white nav-link">Features</Link>
-            <Link to="/pricing" className="hover:text-white nav-link">Pricing</Link>
-            <Link to="/showcase" className="hover:text-white nav-link">Showcase</Link>
-            <Link to="/blog" className="hover:text-white nav-link">Blog</Link>
-            <Link to="/contact" className="hover:text-white nav-link">Contact</Link>
-          </nav>
+            <div className="relative flex items-center gap-3">
+              <Link to="/" className="flex items-center gap-2 text-white font-semibold tracking-tight">
+                <div className="relative">
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-cyan-400 to-purple-500 shadow-[0_0_24px_rgba(0,255,255,0.55)]" />
+                  <div className="absolute inset-0 rounded-xl animate-pulse bg-cyan-400/10" />
+                </div>
+                <span className="text-white">BotBuy</span>
+              </Link>
+            </div>
 
-          <div className="flex items-center gap-2">
-            {user ? (
-              <>
-                <Link to="/dashboard" className="btn-ghost">Dashboard</Link>
-                <button onClick={() => { logout(); navigate('/') }} className="btn-ghost">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="btn-ghost">Log in</Link>
-                <Link to="/signup" className="btn-primary">Sign up</Link>
-              </>
-            )}
+            <nav className="hidden md:flex items-center gap-6 text-slate-200">
+              {links.map((l) => (
+                <Link key={l.to} to={l.to} className={`hover:text-white nav-link ${pathname.startsWith(l.to) ? 'text-white' : ''}`}>{l.label}</Link>
+              ))}
+            </nav>
+
+            <div className="relative flex items-center gap-2">
+              {user ? (
+                <>
+                  <Link to="/dashboard" className="btn-ghost">Dashboard</Link>
+                  <button onClick={() => { logout(); navigate('/') }} className="btn-ghost">Logout</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="btn-ghost">Log in</Link>
+                  <PrimaryButton to="/signup">Sign up</PrimaryButton>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -118,9 +155,9 @@ function Footer(){
   )
 }
 
-function Section({ title, subtitle, children }){
+function Section({ title, subtitle, children, id }){
   return (
-    <section className="max-w-[1280px] mx-auto px-4 py-16">
+    <section id={id} className="max-w-[1280px] mx-auto px-4 py-16">
       {title && <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-2 tracking-tight">{title}</h2>}
       {subtitle && <p className="text-slate-300 mb-8">{subtitle}</p>}
       {children}
@@ -128,88 +165,194 @@ function Section({ title, subtitle, children }){
   )
 }
 
-// ---------- Left Sidebar (remade, collapsible) ----------
+// ---------- Left Sidebar (remade, premium, supports many pages) ----------
 function LeftSidebar(){
-  const [open, setOpen] = useState(false)
-  const items = [
-    { t:'Overview', to:'/', i:'⌂' },
-    { t:'Features', to:'/features', i:'✦' },
-    { t:'Pricing', to:'/pricing', i:'$' },
-    { t:'Docs', to:'/docs', i:'☰' },
-    { t:'Support', to:'/support', i:'?' },
+  const { pathname } = useLocation()
+  const [open, setOpen] = useState(true)
+
+  const groups = [
+    {
+      label: 'General',
+      items: [
+        { t:'Home', to:'/' },
+        { t:'Features', to:'/features' },
+        { t:'Pricing', to:'/pricing' },
+        { t:'Blog', to:'/blog' },
+      ]
+    },
+    {
+      label: 'Resources',
+      items: [
+        { t:'Docs', to:'/docs' },
+        { t:'Support', to:'/support' },
+        { t:'Status', to:'/status' },
+        { t:'FAQs', to:'/faqs' },
+      ]
+    },
+    {
+      label: 'Company',
+      items: [
+        { t:'About', to:'/about' },
+        { t:'Careers', to:'/careers' },
+        { t:'Press', to:'/press' },
+        { t:'Contact', to:'/contact' },
+      ]
+    },
+    {
+      label: 'Legal',
+      items: [
+        { t:'Terms', to:'/terms' },
+        { t:'Privacy', to:'/privacy' },
+        { t:'Security', to:'/security' },
+      ]
+    },
   ]
+
   return (
-    <aside className={`hidden lg:flex fixed top-24 left-3 z-30 transition-[width] duration-300 ${open? 'w-[260px]' : 'w-[72px]'}`}>
-      <div className="glass-card h-[70vh] w-full p-3 flex flex-col overflow-hidden">
+    <aside className={`hidden lg:flex fixed top-24 left-3 z-40 transition-[width] duration-300 ${open? 'w-[280px]' : 'w-[80px]'}`}>
+      <div className="glass-card h-[72vh] w-full p-3 flex flex-col overflow-hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_14px_rgba(0,255,255,0.6)]" />
             <span className={`text-xs text-slate-300 transition-opacity ${open? 'opacity-100' : 'opacity-0'}`}>Navigation</span>
           </div>
-          <button onClick={()=>setOpen(v=>!v)} className="btn-ghost px-2 py-1" aria-label="Toggle sidebar">
+          <button onClick={()=>setOpen(v=>!v)} className="btn-ghost px-2 py-1" aria-label="Toggle sidebar" title={open? 'Collapse' : 'Expand'}>
             {open? '‹' : '›'}
           </button>
         </div>
-        <div className="mt-3 space-y-2 flex-1">
-          {items.map((it,i)=> (
-            <Link key={i} to={it.to} className="group flex items-center gap-3 px-3 py-2 rounded-xl border border-white/10 text-slate-200 hover:bg-white/5 hover:shadow-[0_0_20px_rgba(0,255,255,0.15)] transition">
-              <span className="text-cyan-300">{it.i}</span>
-              <span className={`transition-all duration-300 whitespace-nowrap ${open? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>{it.t}</span>
-            </Link>
+        <div className="mt-3 space-y-4 flex-1 overflow-y-auto pr-1">
+          {groups.map((g,gi)=> (
+            <div key={gi}>
+              <div className={`text-[11px] uppercase tracking-wider text-slate-400 px-2 ${open? 'opacity-100' : 'opacity-0'} transition`}>{g.label}</div>
+              <div className="mt-2 space-y-2">
+                {g.items.map((it, i)=> {
+                  const active = pathname === it.to || (it.to !== '/' && pathname.startsWith(it.to))
+                  return (
+                    <Link key={i} to={it.to} title={it.t} className={`group flex items-center gap-3 px-3 py-2 rounded-xl border border-white/10 transition ${active? 'bg-white/10 border-cyan-300/30 shadow-[0_0_22px_rgba(0,255,255,0.18)] text-white' : 'text-slate-200 hover:bg-white/5 hover:shadow-[0_0_20px_rgba(0,255,255,0.12)]'}`}>
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(0,255,255,0.6)]" />
+                      <span className={`transition-all duration-300 whitespace-nowrap ${open? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>{it.t}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
           ))}
         </div>
         <div className="mt-2">
-          <Link to="/pricing" className="w-full flex items-center justify-center btn-outline-liquid">Get BotBuy</Link>
+          <PrimaryButton to="/pricing" className="w-full">Get BotBuy</PrimaryButton>
         </div>
       </div>
     </aside>
   )
 }
 
-// ---------- Pages ----------
-function Home(){
+// ---------- Decorative Background ----------
+function BackgroundFX(){
   const [pos, setPos] = useState({ x: 0, y: 0 })
   useEffect(()=>{
-    const onMove = (e) => {
-      const { clientX, clientY } = e
-      setPos({ x: clientX, y: clientY })
-    }
+    const onMove = (e) => setPos({ x: e.clientX, y: e.clientY })
     window.addEventListener('pointermove', onMove)
     return () => window.removeEventListener('pointermove', onMove)
   }, [])
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {/* Grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#ffffff10_1px,transparent_1px)] [background-size:20px_20px]" />
+      {/* Color wash */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(0,255,255,0.10),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.10),transparent_55%)]" />
+      {/* Large soft blobs */}
+      <div className="absolute -top-40 -left-32 h-[520px] w-[520px] rounded-full blur-[160px] opacity-25 bg-cyan-500" />
+      <div className="absolute -bottom-40 -right-32 h-[560px] w-[560px] rounded-full blur-[160px] opacity-25 bg-purple-500" />
+      {/* Cursor glow */}
+      <div className="fixed h-64 w-64 rounded-full blur-[100px] bg-cyan-400/25" style={{ transform: `translate(${pos.x - 128}px, ${pos.y - 128}px)` }} />
+      {/* Shimmer beams */}
+      <div className="absolute top-1/3 -left-20 rotate-12 h-1 w-[130%] bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent" />
+      <div className="absolute top-2/3 -right-20 -rotate-12 h-1 w-[130%] bg-gradient-to-r from-transparent via-purple-300/20 to-transparent" />
+    </div>
+  )
+}
 
+// ---------- Cards (remade) ----------
+function FeatureCard({ title, desc, delay = 0 }){
+  return (
+    <div className="group relative glass-card p-6 overflow-hidden transition-transform" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${delay}ms`}}>
+      <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_top_right,rgba(168,85,247,0.15),transparent_60%)]" />
+      <div className="flex items-center gap-3">
+        <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-cyan-400 to-purple-500 shadow-[0_0_14px_rgba(0,255,255,0.45)]" />
+        <div className="text-white font-semibold">{title}</div>
+      </div>
+      <div className="text-slate-400 text-sm mt-2">{desc}</div>
+      <div className="mt-4 h-px w-full gradient-line" />
+      <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition">Learn more →</div>
+    </div>
+  )
+}
+
+// ---------- Pages ----------
+function Home(){
   return (
     <div className="min-h-screen bg-[#05000C] text-slate-200 relative overflow-hidden lg:pl-24">
-      {/* Background systems */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(#ffffff10_1px,transparent_1px)] [background-size:20px_20px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(0,255,255,0.10),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.10),transparent_55%)]" />
-        <div className="absolute -top-40 -left-32 h-[480px] w-[480px] rounded-full blur[160px] opacity-20 bg-cyan-500" />
-        <div className="absolute -bottom-40 -right-32 h-[520px] w-[520px] rounded-full blur[160px] opacity-20 bg-purple-500" />
-      </div>
-
-      {/* Cursor-follow glow */}
-      <div
-        className="pointer-events-none fixed -z-10 h-56 w-56 rounded-full blur-[90px] bg-cyan-400/30"
-        style={{ transform: `translate(${pos.x - 112}px, ${pos.y - 112}px)` }}
-      />
-
+      <BackgroundFX/>
       <Navbar/>
       <LeftSidebar/>
 
       {/* Hero */}
-      <section className="pt-28 pb-16">
-        <div className="max-w-[1280px] mx-auto px-4">
-          <div className="text-center md:text-left max-w-3xl">
+      <section className="pt-28 pb-12">
+        <div className="max-w-[1280px] mx-auto px-4 grid md:grid-cols-[1fr_420px] gap-10 items-center">
+          <div>
             <h1 className="display-gradient text-5xl md:text-6xl font-extrabold tracking-tight reveal" style={{animationDelay:'60ms'}}>
               Premium Bot Storefronts
             </h1>
-            <p className="mt-4 text-slate-300 text-base md:text-lg max-w-2xl mx-auto md:mx-0 reveal" style={{animationDelay:'120ms'}}>
+            <p className="mt-4 text-slate-300 text-base md:text-lg max-w-2xl reveal" style={{animationDelay:'120ms'}}>
               Engineered for sellers who value polish, power, and trust. Take payments, deliver instantly, and manage customers — all in one futuristic surface.
             </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
-              <Link to="/pricing" className="btn-primary">Get Started</Link>
+            <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+              <PrimaryButton to="/pricing">Get Started</PrimaryButton>
               <Link to="/features" className="btn-outline-liquid">Explore Features</Link>
+            </div>
+
+            <div className="mt-10 grid sm:grid-cols-3 gap-4">
+              {[
+                { h:"Instant Checkout", p:"One-click flows ready to swap with live providers." },
+                { h:"Premium Design", p:"Neon gradients, glass surfaces, precise motion." },
+                { h:"Owner Dashboard", p:"Create plans, view orders, control your store." },
+              ].map((c,i)=> (
+                <FeatureCard key={i} title={c.h} desc={c.p} delay={160 + i*90}/>
+              ))}
+            </div>
+          </div>
+
+          {/* Hero visual */}
+          <div className="hidden md:block">
+            <div className="sticky top-28">
+              <div className="relative glass-card p-6 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)] overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.08),transparent_50%)]" />
+                <div className="relative z-[1] space-y-3">
+                  <div className="text-white/90 font-semibold">Live metrics</div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      ['2m+','Requests'],['<200ms','Step'],['99.9%','Uptime']
+                    ].map((m,i)=> (
+                      <div key={i} className="glass-card p-3 text-center">
+                        <div className="text-lg font-bold text-white">{m[0]}</div>
+                        <div className="text-[11px] text-slate-400">{m[1]}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="glass-card p-3">
+                      <div className="text-xs text-slate-400">Today</div>
+                      <div className="text-2xl font-extrabold text-white">$1,240</div>
+                    </div>
+                    <div className="glass-card p-3">
+                      <div className="text-xs text-slate-400">New customers</div>
+                      <div className="text-2xl font-extrabold text-white">+58</div>
+                    </div>
+                  </div>
+                  <PrimaryButton to="/pricing" className="w-full">Launch now</PrimaryButton>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -227,28 +370,23 @@ function Home(){
         </div>
       </div>
 
-      {/* Product Highlights */}
+      {/* Highlights (remade cards) */}
       <Section title="Highlights" subtitle="Clarity through immersion. Built for the future.">
         <div className="grid md:grid-cols-3 gap-6">
           {[
             {h:'Beautiful Storefronts', p:'Cards, modals, and motion tuned for a premium feel.'},
-            {h:'Checkout that converts', p:'Minimal friction, clear feedback, and gorgeous CTAs.'},
+            {h:'Checkout that converts', p:'Minimal friction, clear feedback, gorgeous CTAs.'},
             {h:'Scales with you', p:'From one product to a full catalog — stay consistent.'},
             {h:'License Keys', p:'Deliver instantly with secure license generation.'},
             {h:'Webhooks', p:'Connect to Discord or your backend for fulfillment.'},
             {h:'Analytics', p:'Understand performance and iterate with confidence.'},
           ].map((c,i)=> (
-            <div key={i} className="group glass-card p-6 hover:border-cyan-400/20 transition-all duration-300" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${i*70}ms`} }>
-              <div className="text-white font-semibold">{c.h}</div>
-              <div className="text-slate-400 text-sm mt-1">{c.p}</div>
-              <div className="mt-4 h-px w-full gradient-line" />
-              <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition">Learn more →</div>
-            </div>
+            <FeatureCard key={i} title={c.h} desc={c.p} delay={i*70} />
           ))}
         </div>
       </Section>
 
-      {/* How it works (added) */}
+      {/* How it works */}
       <Section title="How it works" subtitle="Three steps to launch your bot store">
         <div className="grid md:grid-cols-3 gap-6">
           {[
@@ -265,7 +403,7 @@ function Home(){
         </div>
       </Section>
 
-      {/* Use cases (added) */}
+      {/* Use cases */}
       <Section title="Use cases" subtitle="Built for creators, teams, and studios">
         <div className="grid md:grid-cols-3 gap-6">
           {[
@@ -273,45 +411,56 @@ function Home(){
             {h:'Gaming Mods', p:'Sell mod packs with secure update channels.'},
             {h:'AI Tools', p:'Gate premium endpoints and distribute credits.'},
             {h:'Education', p:'Course add-ons, scripts, and research helpers.'},
-            {h:'Productivity', p:'Keyboard macros, schedulers, and file automations.'},
+            {h:'Productivity', p:'Keyboard macros, schedulers, and automations.'},
             {h:'Agencies', p:'Offer white-labeled client utilities at scale.'},
           ].map((c,i)=> (
-            <div key={i} className="glass-card p-6">
+            <div key={i} className="group relative glass-card p-6 overflow-hidden">
+              <div className="absolute -top-8 -left-8 h-24 w-24 rounded-full bg-purple-400/10 blur-2xl" />
               <div className="text-white font-semibold">{c.h}</div>
               <div className="text-slate-400 text-sm mt-1">{c.p}</div>
+              <div className="mt-4 h-px w-full gradient-line" />
             </div>
           ))}
         </div>
       </Section>
 
-      {/* Metrics (added) */}
-      <div className="px-4 pb-4">
-        <div className="max-w-[1280px] mx-auto glass-card p-6 grid sm:grid-cols-3 gap-6">
-          {[
-            {n:'2m+', l:'Requests served'},
-            {n:'<200ms', l:'Avg. checkout step'},
-            {n:'99.9%', l:'Uptime'},
-          ].map((m,i)=> (
-            <div key={i} className="text-center">
-              <div className="text-3xl md:text-4xl font-extrabold text-white">{m.n}</div>
-              <div className="text-slate-400 text-sm mt-1">{m.l}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* FAQ */}
-      <Section title="FAQs" subtitle="Answers to common questions">
+      {/* Comparison */}
+      <Section title="Why choose BotBuy" subtitle="Side-by-side with typical checkout solutions">
         <div className="grid md:grid-cols-2 gap-6">
+          <div className="glass-card p-6">
+            <div className="text-white font-semibold mb-2">BotBuy</div>
+            <ul className="text-sm text-slate-300 space-y-2">
+              <li>• Polished, animated UI out of the box</li>
+              <li>• License keys + instant delivery</li>
+              <li>• Owner + customer portals</li>
+              <li>• Simple webhooks</li>
+              <li>• Beautiful analytics</li>
+            </ul>
+          </div>
+          <div className="glass-card p-6">
+            <div className="text-white font-semibold mb-2">Typical checkout</div>
+            <ul className="text-sm text-slate-300 space-y-2">
+              <li>• Generic forms, no brand feel</li>
+              <li>• Manual fulfillment</li>
+              <li>• No self-serve portals</li>
+              <li>• Complex custom integrations</li>
+              <li>• Minimal insight</li>
+            </ul>
+          </div>
+        </div>
+      </Section>
+
+      {/* Testimonials */}
+      <Section title="Loved by creators" subtitle="Real signals from early teams">
+        <div className="grid md:grid-cols-3 gap-6">
           {[
-            {q:'Can I use real PayPal?', a:'Yes. This demo simulates PayPal but can be switched to the live Orders API.'},
-            {q:'Do you support subscriptions?', a:'Yes. Monthly and yearly intervals are supported.'},
-            {q:'Is there a dashboard?', a:'Owners can create plans and see orders. Users have their own portal.'},
-            {q:'How fast is setup?', a:'Create a plan and start selling within minutes.'},
-          ].map((f,i)=> (
-            <div key={i} className="glass-card p-5">
-              <div className="text-white font-semibold">{f.q}</div>
-              <div className="text-slate-400 text-sm mt-1">{f.a}</div>
+            ['“Our conversions jumped 22% in a week.”','Lena, AlgoFoundry'],
+            ['“Set up in an afternoon. Looks like a million bucks.”','Ravi, ScriptHaus'],
+            ['“Delivery and keys are instant. Support is easy.”','Kai, ModForge'],
+          ].map((t,i)=> (
+            <div key={i} className="glass-card p-6">
+              <div className="text-white mb-2">{t[0]}</div>
+              <div className="text-slate-400 text-sm">{t[1]}</div>
             </div>
           ))}
         </div>
@@ -325,7 +474,7 @@ function Home(){
             <div className="text-slate-300 mt-1">Create a plan and go live today. Premium feel, real results.</div>
           </div>
           <div className="flex gap-3">
-            <Link to="/pricing" className="btn-primary">Choose a plan</Link>
+            <PrimaryButton to="/pricing">Choose a plan</PrimaryButton>
             <Link to="/features" className="btn-outline-liquid">See features</Link>
           </div>
         </div>
@@ -338,16 +487,18 @@ function Home(){
 
 function Features(){
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Features" subtitle="A complete toolkit for selling bots">
-        <ul className="grid md:grid-cols-2 gap-6">
-          {[
-            'Beautiful product pages','Secure payments','Customer accounts','Order management','Coupons & promos','Analytics','Webhooks','Export data'
-          ].map((f,i)=> (
-            <li key={i} className="glass-card p-5">{f}</li>
-          ))}
-        </ul>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Features" subtitle="A complete toolkit for selling bots">
+          <ul className="grid md:grid-cols-2 gap-6">
+            {[
+              'Beautiful product pages','Secure payments','Customer accounts','Order management','Coupons & promos','Analytics','Webhooks','Export data'
+            ].map((f,i)=> (
+              <li key={i} className="glass-card p-5">{f}</li>
+            ))}
+          </ul>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -359,26 +510,29 @@ function Pricing(){
   })()},[])
   const navigate = useNavigate()
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Pricing" subtitle="Choose a plan and start selling">
-        <div className="grid md:grid-cols-3 gap-6">
-          {plans.length ? plans.map((p)=> (
-            <div key={p.slug} className="glass-card p-6 hover:border-cyan-400/20 transition">
-              <h3 className="text-white text-xl font-semibold mb-1">{p.title}</h3>
-              <p className="text-slate-400 text-sm mb-3">{p.description}</p>
-              <div className="text-3xl font-extrabold text-white mb-4">${p.price}{p.interval !== 'one-time' && <span className="text-slate-400 text-base">/{p.interval}</span>}</div>
-              <ul className="text-sm text-slate-300 space-y-1 mb-4">
-                {(p.features || []).map((f,i)=> <li key={i}>• {f}</li>)}
-              </ul>
-              <button onClick={()=> navigate(`/checkout/${p.slug}`)} className="w-full btn-primary">Buy</button>
-            </div>
-          )) : (
-            [1,2,3].map(i=> (
-              <div key={i} className="glass-card p-6 animate-pulse h-56"/>
-            ))
-          )}
-        </div>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Pricing" subtitle="Choose a plan and start selling">
+          <div className="grid md:grid-cols-3 gap-6">
+            {plans.length ? plans.map((p)=> (
+              <div key={p.slug} className="group glass-card p-6 hover:border-cyan-400/20 transition relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
+                <h3 className="text-white text-xl font-semibold mb-1">{p.title}</h3>
+                <p className="text-slate-400 text-sm mb-3">{p.description}</p>
+                <div className="text-3xl font-extrabold text-white mb-4">${p.price}{p.interval !== 'one-time' && <span className="text-slate-400 text-base">/{p.interval}</span>}</div>
+                <ul className="text-sm text-slate-300 space-y-1 mb-4">
+                  {(p.features || []).map((f,i)=> <li key={i}>• {f}</li>)}
+                </ul>
+                <PrimaryButton onClick={()=> navigate(`/checkout/${p.slug}`)} className="w-full">Buy</PrimaryButton>
+              </div>
+            )) : (
+              [1,2,3].map(i=> (
+                <div key={i} className="glass-card p-6 animate-pulse h-56"/>
+              ))
+            )}
+          </div>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -405,16 +559,18 @@ function Checkout(){
   }
 
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Checkout" subtitle={`Plan: ${planSlug}`}> 
-        <div className="max-w-md glass-card p-6">
-          <p className="mb-4 text-slate-300">You will be redirected to PayPal to complete your purchase. For this demo, we simulate the approval and completion.</p>
-          <button onClick={startCheckout} className="w-full btn-primary disabled:opacity-50" disabled={status==='creating' || status==='completed'}>
-            {status==='creating' ? 'Creating order...' : status==='completed' ? 'Completed' : 'Pay with PayPal'}
-          </button>
-          {status==='error' && <p className="text-rose-400 text-sm mt-3">There was a problem starting checkout.</p>}
-        </div>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Checkout" subtitle={`Plan: ${planSlug}`}> 
+          <div className="max-w-md glass-card p-6">
+            <p className="mb-4 text-slate-300">You will be redirected to PayPal to complete your purchase. For this demo, we simulate the approval and completion.</p>
+            <PrimaryButton onClick={startCheckout} className="w-full" disabled={status==='creating' || status==='completed'}>
+              {status==='creating' ? 'Creating order...' : status==='completed' ? 'Completed' : 'Pay with PayPal'}
+            </PrimaryButton>
+            {status==='error' && <p className="text-rose-400 text-sm mt-3">There was a problem starting checkout.</p>}
+          </div>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -439,22 +595,24 @@ function Login(){
   }
 
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Log in">
-        <form onSubmit={onSubmit} className="max-w-md glass-card p-6 space-y-4">
-          {error && <div className="text-rose-400 text-sm">{error}</div>}
-          <div>
-            <label className="block text-sm mb-1">Email</label>
-            <input value={email} onChange={e=>setEmail(e.target.value)} type="email" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Password</label>
-            <input value={password} onChange={e=>setPassword(e.target.value)} type="password" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
-          </div>
-          <button className="w-full btn-primary">Log in</button>
-          <p className="text-sm text-slate-400">No account? <Link to="/signup" className="text-white underline">Sign up</Link></p>
-        </form>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Log in">
+          <form onSubmit={onSubmit} className="max-w-md glass-card p-6 space-y-4">
+            {error && <div className="text-rose-400 text-sm">{error}</div>}
+            <div>
+              <label className="block text-sm mb-1">Email</label>
+              <input value={email} onChange={e=>setEmail(e.target.value)} type="email" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Password</label>
+              <input value={password} onChange={e=>setPassword(e.target.value)} type="password" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
+            </div>
+            <PrimaryButton className="w-full">Log in</PrimaryButton>
+            <p className="text-sm text-slate-400">No account? <Link to="/signup" className="text-white underline">Sign up</Link></p>
+          </form>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -479,26 +637,28 @@ function Signup(){
   }
 
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Create your account">
-        <form onSubmit={onSubmit} className="max-w-md glass-card p-6 space-y-4">
-          {error && <div className="text-rose-400 text-sm">{error}</div>}
-          <div>
-            <label className="block text-sm mb-1">Name</label>
-            <input value={name} onChange={e=>setName(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Email</label>
-            <input value={email} onChange={e=>setEmail(e.target.value)} type="email" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Password</label>
-            <input value={password} onChange={e=>setPassword(e.target.value)} type="password" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
-          </div>
-          <button className="w-full btn-primary">Create account</button>
-          <p className="text-sm text-slate-400">Already have an account? <Link to="/login" className="text-white underline">Log in</Link></p>
-        </form>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Create your account">
+          <form onSubmit={onSubmit} className="max-w-md glass-card p-6 space-y-4">
+            {error && <div className="text-rose-400 text-sm">{error}</div>}
+            <div>
+              <label className="block text-sm mb-1">Name</label>
+              <input value={name} onChange={e=>setName(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Email</label>
+              <input value={email} onChange={e=>setEmail(e.target.value)} type="email" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Password</label>
+              <input value={password} onChange={e=>setPassword(e.target.value)} type="password" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required/>
+            </div>
+            <PrimaryButton className="w-full">Create account</PrimaryButton>
+            <p className="text-sm text-slate-400">Already have an account? <Link to="/login" className="text-white underline">Log in</Link></p>
+          </form>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -512,23 +672,27 @@ function RequireAuth({ children }){
 function Dashboard(){
   const { user } = useAuth()
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Your dashboard" subtitle={`Welcome back${user?.name ? ', '+user.name : ''}!`}>
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card title="Orders" desc="View your purchases" to="/orders"/>
-          <Card title="Settings" desc="Manage your account" to="/settings"/>
-          <Card title="Explore plans" desc="Buy more bots" to="/pricing"/>
-        </div>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Your dashboard" subtitle={`Welcome back${user?.name ? ', '+user.name : ''}!`}>
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card title="Orders" desc="View your purchases" to="/orders"/>
+            <Card title="Settings" desc="Manage your account" to="/settings"/>
+            <Card title="Explore plans" desc="Buy more bots" to="/pricing"/>
+          </div>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
 
 function Card({title,desc,to}){
   return (
-    <Link to={to} className="glass-card p-6 hover:border-cyan-400/20 transition">
+    <Link to={to} className="group relative glass-card p-6 hover:border-cyan-400/20 transition overflow-hidden">
+      <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
       <div className="text-white font-semibold mb-1">{title}</div>
       <div className="text-slate-400 text-sm">{desc}</div>
+      <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition">Open →</div>
     </Link>
   )
 }
@@ -540,17 +704,19 @@ function Orders(){
     try{ const res = await fetch(`${API_BASE}/orders`,{ headers: { Authorization: `Bearer ${token}` } }); const data = await res.json(); if(res.ok) setOrders(data.orders||[]) }catch(e){}
   })()},[])
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Your orders">
-        <div className="space-y-3">
-          {orders.length? orders.map(o=> (
-            <div key={o._id} className="glass-card p-4">
-              <div className="text-white font-semibold">{o.plan_slug}</div>
-              <div className="text-slate-400 text-sm">${o.amount} • {o.currency} • {o.status}</div>
-            </div>
-          )) : <div className="text-slate-400">No orders yet.</div>}
-        </div>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Your orders">
+          <div className="space-y-3">
+            {orders.length? orders.map(o=> (
+              <div key={o._id} className="glass-card p-4">
+                <div className="text-white font-semibold">{o.plan_slug}</div>
+                <div className="text-slate-400 text-sm">${o.amount} • {o.currency} • {o.status}</div>
+              </div>
+            )) : <div className="text-slate-400">No orders yet.</div>}
+          </div>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -558,14 +724,16 @@ function Orders(){
 function Settings(){
   const { user } = useAuth()
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Settings">
-        <div className="max-w-md glass-card p-6">
-          <div className="mb-2">Name: <span className="text-white">{user?.name}</span></div>
-          <div className="mb-2">Email: <span className="text-white">{user?.email}</span></div>
-          <p className="text-slate-400 text-sm">Profile editing is simplified for the demo.</p>
-        </div>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Settings">
+          <div className="max-w-md glass-card p-6">
+            <div className="mb-2">Name: <span className="text-white">{user?.name}</span></div>
+            <div className="mb-2">Email: <span className="text-white">{user?.email}</span></div>
+            <p className="text-slate-400 text-sm">Profile editing is simplified for the demo.</p>
+          </div>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -586,14 +754,16 @@ function AdminLogin(){
     }catch(err){ setError(err.message) }
   }
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Owner login" subtitle="Enter the owner password">
-        <form onSubmit={onSubmit} className="max-w-md glass-card p-6 space-y-4">
-          {error && <div className="text-rose-400 text-sm">{error}</div>}
-          <input value={password} onChange={e=>setPassword(e.target.value)} type="password" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" placeholder="Password" required/>
-          <button className="w-full btn-primary">Enter</button>
-        </form>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Owner login" subtitle="Enter the owner password">
+          <form onSubmit={onSubmit} className="max-w-md glass-card p-6 space-y-4">
+            {error && <div className="text-rose-400 text-sm">{error}</div>}
+            <input value={password} onChange={e=>setPassword(e.target.value)} type="password" className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/60" placeholder="Password" required/>
+            <PrimaryButton className="w-full">Enter</PrimaryButton>
+          </form>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -607,20 +777,22 @@ function OwnerDashboard(){
     try{ const res = await fetch(`${API_BASE}/admin/orders`, { headers: { Authorization: `Bearer ${token}` } }); const data = await res.json(); if(res.ok) setOrders(data.orders||[]) }catch(e){}
   })()},[])
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Owner dashboard" subtitle="View recent orders">
-        <div className="mb-6">
-          <Link to="/owner/plans" className="btn-outline-liquid">Manage Plans</Link>
-        </div>
-        <div className="space-y-3">
-          {orders.length? orders.map(o=> (
-            <div key={o._id} className="glass-card p-4">
-              <div className="text-white font-semibold">{o.plan_slug}</div>
-              <div className="text-slate-400 text-sm">${o.amount} • {o.currency} • {o.status}</div>
-            </div>
-          )) : <div className="text-slate-400">No orders yet.</div>}
-        </div>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Owner dashboard" subtitle="View recent orders">
+          <div className="mb-6">
+            <Link to="/owner/plans" className="btn-outline-liquid">Manage Plans</Link>
+          </div>
+          <div className="space-y-3">
+            {orders.length? orders.map(o=> (
+              <div key={o._id} className="glass-card p-4">
+                <div className="text-white font-semibold">{o.plan_slug}</div>
+                <div className="text-slate-400 text-sm">${o.amount} • {o.currency} • {o.status}</div>
+              </div>
+            )) : <div className="text-slate-400">No orders yet.</div>}
+          </div>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
@@ -642,57 +814,65 @@ function OwnerPlans(){
   }
   useEffect(()=>{ if(!token) navigate('/owner-login') }, [])
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Create a plan" subtitle="Add a new product to sell">
-        <form onSubmit={submit} className="max-w-xl grid md:grid-cols-2 gap-4 glass-card p-6">
-          {msg && <div className="md:col-span-2 text-sm text-slate-300">{msg}</div>}
-          {['slug','title','description','price'].map((k)=> (
-            <div key={k} className={k==='description'||k==='price'? 'md:col-span-2': ''}>
-              <label className="block text-sm mb-1 capitalize">{k}</label>
-              <input value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required={k!=='description'} />
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Create a plan" subtitle="Add a new product to sell">
+          <form onSubmit={submit} className="max-w-xl grid md:grid-cols-2 gap-4 glass-card p-6">
+            {msg && <div className="md:col-span-2 text-sm text-slate-300">{msg}</div>}
+            {['slug','title','description','price'].map((k)=> (
+              <div key={k} className={k==='description'||k==='price'? 'md:col-span-2': ''}>
+                <label className="block text-sm mb-1 capitalize">{k}</label>
+                <input value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/60" required={k!=='description'} />
+              </div>
+            ))}
+            <div>
+              <label className="block text-sm mb-1">Interval</label>
+              <select value={form.interval} onChange={e=>setForm({...form, interval:e.target.value})} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/60">
+                <option value="one-time">one-time</option>
+                <option value="monthly">monthly</option>
+                <option value="yearly">yearly</option>
+              </select>
             </div>
-          ))}
-          <div>
-            <label className="block text-sm mb-1">Interval</label>
-            <select value={form.interval} onChange={e=>setForm({...form, interval:e.target.value})} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/60">
-              <option value="one-time">one-time</option>
-              <option value="monthly">monthly</option>
-              <option value="yearly">yearly</option>
-            </select>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm mb-1">Features (comma separated)</label>
-            <input value={form.features} onChange={e=>setForm({...form, features:e.target.value})} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/60" />
-          </div>
-          <div className="md:col-span-2">
-            <button className="w-full btn-primary">Create Plan</button>
-          </div>
-        </form>
-      </Section>
+            <div className="md:col-span-2">
+              <label className="block text-sm mb-1">Features (comma separated)</label>
+              <input value={form.features} onChange={e=>setForm({...form, features:e.target.value})} className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/60" />
+            </div>
+            <div className="md:col-span-2">
+              <PrimaryButton className="w-full">Create Plan</PrimaryButton>
+            </div>
+          </form>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
 
-// ----- Simple content pages (to reach 15+ pages) -----
+// ----- Simple content pages -----
 const SimplePage = ({title, body}) => (
-  <div className="min-h-screen text-slate-200"><Navbar/>
-    <Section title={title}><p className="text-slate-300 max-w-3xl">{body||'Content coming soon.'}</p></Section>
+  <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+    <div className="lg:pl-24">
+      <Section title={title}><p className="text-slate-300 max-w-3xl">{body||'Content coming soon.'}</p></Section>
+    </div>
     <Footer/></div>
 )
 
 function Blog(){
   return (
-    <div className="min-h-screen text-slate-200"><Navbar/>
-      <Section title="Blog" subtitle="Latest tips for automation sellers">
-        <div className="grid md:grid-cols-3 gap-6">
-          {[1,2,3,4,5,6].map(i=> (
-            <Link key={i} to={`/blog/${i}`} className="glass-card p-5 hover:border-cyan-400/20 transition">
-              <div className="text-white font-semibold mb-1">Post #{i}</div>
-              <div className="text-slate-400 text-sm">How to scale your bot sales</div>
-            </Link>
-          ))}
-        </div>
-      </Section>
+    <div className="min-h-screen text-slate-200 relative"><BackgroundFX/><Navbar/>
+      <div className="lg:pl-24">
+        <Section title="Blog" subtitle="Latest tips for automation sellers">
+          <div className="grid md:grid-cols-3 gap-6">
+            {[1,2,3,4,5,6].map(i=> (
+              <Link key={i} to={`/blog/${i}`} className="group glass-card p-5 hover:border-cyan-400/20 transition relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-cyan-400/10 blur-2xl" />
+                <div className="text-white font-semibold mb-1">Post #{i}</div>
+                <div className="text-slate-400 text-sm">How to scale your bot sales</div>
+                <div className="mt-4 text-cyan-300 text-sm opacity-0 group-hover:opacity-100 transition">Read →</div>
+              </Link>
+            ))}
+          </div>
+        </Section>
+      </div>
       <Footer/></div>
   )
 }
