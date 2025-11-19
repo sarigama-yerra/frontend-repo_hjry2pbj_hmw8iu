@@ -128,29 +128,39 @@ function Section({ title, subtitle, children }){
   )
 }
 
-// ---------- Right Sidebar (collapsible) ----------
-function RightSidebar(){
-  const [collapsed, setCollapsed] = useState(false)
+// ---------- Left Sidebar (remade, collapsible) ----------
+function LeftSidebar(){
+  const [open, setOpen] = useState(false)
+  const items = [
+    { t:'Overview', to:'/', i:'⌂' },
+    { t:'Features', to:'/features', i:'✦' },
+    { t:'Pricing', to:'/pricing', i:'$' },
+    { t:'Docs', to:'/docs', i:'☰' },
+    { t:'Support', to:'/support', i:'?' },
+  ]
   return (
-    <aside className={`hidden lg:flex fixed top-24 right-3 z-30 transition-[width] duration-300 ${collapsed? 'sidebar collapsed':'sidebar'}`}>
-      <div className="glass-card h-[70vh] w-full p-3 flex flex-col">
-        <button onClick={()=>setCollapsed(v=>!v)} className="self-end btn-ghost" aria-label="Toggle sidebar">
-          {collapsed? '›' : '‹'}
-        </button>
-        <div className="mt-2 flex-1 flex flex-col gap-2">
-          {[
-            { t:'Pricing', to:'/pricing', i:'$' },
-            { t:'Showcase', to:'/showcase', i:'◆' },
-            { t:'Docs', to:'/docs', i:'☰' },
-            { t:'Support', to:'/support', i:'✦' },
-          ].map((it,i)=>(
+    <aside className={`hidden lg:flex fixed top-24 left-3 z-30 transition-[width] duration-300 ${open? 'w-[260px]' : 'w-[72px]'}`}>
+      <div className="glass-card h-[70vh] w-full p-3 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_14px_rgba(0,255,255,0.6)]" />
+            <span className={`text-xs text-slate-300 transition-opacity ${open? 'opacity-100' : 'opacity-0'}`}>Navigation</span>
+          </div>
+          <button onClick={()=>setOpen(v=>!v)} className="btn-ghost px-2 py-1" aria-label="Toggle sidebar">
+            {open? '‹' : '›'}
+          </button>
+        </div>
+        <div className="mt-3 space-y-2 flex-1">
+          {items.map((it,i)=> (
             <Link key={i} to={it.to} className="group flex items-center gap-3 px-3 py-2 rounded-xl border border-white/10 text-slate-200 hover:bg-white/5 hover:shadow-[0_0_20px_rgba(0,255,255,0.15)] transition">
               <span className="text-cyan-300">{it.i}</span>
-              <span className={`${collapsed? 'opacity-0 w-0':'opacity-100'} transition-all duration-300 whitespace-nowrap`}>{it.t}</span>
+              <span className={`transition-all duration-300 whitespace-nowrap ${open? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>{it.t}</span>
             </Link>
           ))}
         </div>
-        <div className="mt-3 text-xs text-slate-400">Quick Access</div>
+        <div className="mt-2">
+          <Link to="/pricing" className="w-full flex items-center justify-center btn-outline-liquid">Get BotBuy</Link>
+        </div>
       </div>
     </aside>
   )
@@ -169,13 +179,13 @@ function Home(){
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#05000C] text-slate-200 relative overflow-hidden">
+    <div className="min-h-screen bg-[#05000C] text-slate-200 relative overflow-hidden lg:pl-24">
       {/* Background systems */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(#ffffff10_1px,transparent_1px)] [background-size:20px_20px]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(0,255,255,0.10),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.10),transparent_55%)]" />
-        <div className="absolute -top-40 -left-32 h-[480px] w-[480px] rounded-full blur-[160px] opacity-20 bg-cyan-500" />
-        <div className="absolute -bottom-40 -right-32 h-[520px] w-[520px] rounded-full blur-[160px] opacity-20 bg-purple-500" />
+        <div className="absolute -top-40 -left-32 h-[480px] w-[480px] rounded-full blur[160px] opacity-20 bg-cyan-500" />
+        <div className="absolute -bottom-40 -right-32 h-[520px] w-[520px] rounded-full blur[160px] opacity-20 bg-purple-500" />
       </div>
 
       {/* Cursor-follow glow */}
@@ -185,12 +195,12 @@ function Home(){
       />
 
       <Navbar/>
-      <RightSidebar/>
+      <LeftSidebar/>
 
       {/* Hero */}
       <section className="pt-28 pb-16">
-        <div className="max-w-[1280px] mx-auto px-4 grid md:grid-cols-[1fr_360px] gap-10">
-          <div className="text-center md:text-left">
+        <div className="max-w-[1280px] mx-auto px-4">
+          <div className="text-center md:text-left max-w-3xl">
             <h1 className="display-gradient text-5xl md:text-6xl font-extrabold tracking-tight reveal" style={{animationDelay:'60ms'}}>
               Premium Bot Storefronts
             </h1>
@@ -200,40 +210,6 @@ function Home(){
             <div className="mt-8 flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
               <Link to="/pricing" className="btn-primary">Get Started</Link>
               <Link to="/features" className="btn-outline-liquid">Explore Features</Link>
-            </div>
-            <div className="mt-10 grid sm:grid-cols-3 gap-4">
-              {[
-                { h:"Instant Checkout", p:"One-click flows with simulated PayPal ready to swap for real." },
-                { h:"Premium Design", p:"Neon gradients, glass surfaces, and precise motion." },
-                { h:"Owner Dashboard", p:"Create plans, view orders, and control your store." },
-              ].map((c,i)=> (
-                <div key={i} className="glass-card p-5 hover:border-cyan-400/20 transition-all duration-300" style={{animation:'rise 500ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${160 + i*80}ms`}}>
-                  <div className="text-white font-semibold">{c.h}</div>
-                  <div className="text-slate-400 text-sm mt-1">{c.p}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right hero card */}
-          <div className="hidden md:block">
-            <div className="sticky top-28">
-              <div className="glass-card p-4 shadow-[inset_0_0_40px_rgba(255,255,255,0.05)]">
-                <div className="text-sm text-slate-300 mb-3">Quick Access</div>
-                <div className="flex flex-col gap-2">
-                  {[
-                    { t:'Pricing', to:'/pricing' },
-                    { t:'Showcase', to:'/showcase' },
-                    { t:'Docs', to:'/docs' },
-                    { t:'Support', to:'/support' },
-                  ].map((it, i)=> (
-                    <Link key={i} to={it.to} className="group flex items-center justify-between px-3 py-2 rounded-xl border border-white/10 text-slate-200 hover:bg-white/5 hover:shadow-[0_0_20px_rgba(0,255,255,0.15)] transition">
-                      <span>{it.t}</span>
-                      <span className="text-cyan-300 group-hover:translate-x-0.5 transition">→</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -262,7 +238,7 @@ function Home(){
             {h:'Webhooks', p:'Connect to Discord or your backend for fulfillment.'},
             {h:'Analytics', p:'Understand performance and iterate with confidence.'},
           ].map((c,i)=> (
-            <div key={i} className="group glass-card p-6 hover:border-cyan-400/20 transition-all duration-300" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${i*70}ms`}}>
+            <div key={i} className="group glass-card p-6 hover:border-cyan-400/20 transition-all duration-300" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${i*70}ms`} }>
               <div className="text-white font-semibold">{c.h}</div>
               <div className="text-slate-400 text-sm mt-1">{c.p}</div>
               <div className="mt-4 h-px w-full gradient-line" />
@@ -272,20 +248,59 @@ function Home(){
         </div>
       </Section>
 
-      {/* Showcase preview */}
-      <Section title="Showcase" subtitle="A glimpse of what creators are selling with BotBuy.">
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {[1,2,3,4,5,6].map((i)=> (
-            <div key={i} className="glass-card p-4 flex flex-col gap-3 hover:border-cyan-400/20 transition" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${i*60}ms`}}>
-              <div className="h-28 rounded-lg bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.15),transparent_55%)]" />
-              <div className="text-white font-semibold">AI AutoTrader #{i}</div>
-              <div className="text-slate-400 text-sm">High-precision market execution bot.</div>
+      {/* How it works (added) */}
+      <Section title="How it works" subtitle="Three steps to launch your bot store">
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {h:'Create a plan', p:'Define price, interval, and features. Publish in seconds.'},
+            {h:'Share your page', p:'Your branded checkout and product pages are ready.'},
+            {h:'Get paid & deliver', p:'Instant delivery with license keys and receipts.'},
+          ].map((c,i)=> (
+            <div key={i} className="glass-card p-6 relative overflow-hidden" style={{animation:'rise 520ms cubic-bezier(0.22,1,0.36,1) both', animationDelay:`${i*90}ms`} }>
+              <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-cyan-400/10 blur-2xl" />
+              <div className="text-white font-semibold">{i+1}. {c.h}</div>
+              <div className="text-slate-400 text-sm mt-1">{c.p}</div>
             </div>
           ))}
         </div>
       </Section>
 
-      {/* FAQ teaser */}
+      {/* Use cases (added) */}
+      <Section title="Use cases" subtitle="Built for creators, teams, and studios">
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            {h:'Trading & Signals', p:'Automate entries with risk controls and deliver keys instantly.'},
+            {h:'Gaming Mods', p:'Sell mod packs with secure update channels.'},
+            {h:'AI Tools', p:'Gate premium endpoints and distribute credits.'},
+            {h:'Education', p:'Course add-ons, scripts, and research helpers.'},
+            {h:'Productivity', p:'Keyboard macros, schedulers, and file automations.'},
+            {h:'Agencies', p:'Offer white-labeled client utilities at scale.'},
+          ].map((c,i)=> (
+            <div key={i} className="glass-card p-6">
+              <div className="text-white font-semibold">{c.h}</div>
+              <div className="text-slate-400 text-sm mt-1">{c.p}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* Metrics (added) */}
+      <div className="px-4 pb-4">
+        <div className="max-w-[1280px] mx-auto glass-card p-6 grid sm:grid-cols-3 gap-6">
+          {[
+            {n:'2m+', l:'Requests served'},
+            {n:'<200ms', l:'Avg. checkout step'},
+            {n:'99.9%', l:'Uptime'},
+          ].map((m,i)=> (
+            <div key={i} className="text-center">
+              <div className="text-3xl md:text-4xl font-extrabold text-white">{m.n}</div>
+              <div className="text-slate-400 text-sm mt-1">{m.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* FAQ */}
       <Section title="FAQs" subtitle="Answers to common questions">
         <div className="grid md:grid-cols-2 gap-6">
           {[
